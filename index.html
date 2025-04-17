@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flipper Game</title>
+    <style>
+        canvas {
+            border: 2px solid black;
+            display: block;
+            margin: 0 auto;
+        }
+        #score {
+            text-align: center;
+            font-size: 20px;
+            margin: 10px;
+        }
+        #startButton {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 18px;
+            color: white;
+            background-color: #0095DD;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #startButton:hover {
+            background-color: #007ACC;
+        }
+    </style>
+</head>
+<body>
+    <div id="score">Punti: 0</div>
+    <button id="startButton">Inizia</button>
+    <canvas id="gameCanvas" width="400" height="600" style="display:none;"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDiv = document.getElementById('score');
+        const startButton = document.getElementById('startButton');
+
+        // Ball properties
+        let ball = {
+            x: canvas.width / 2,
+            y: canvas.height - 30,
+            radius: 10,
+            dx: 2,
+            dy: -2
+        };
+
+        // Paddle properties
+        let paddle = {
+            width: 100,
+            height: 10,
+            x: (canvas.width - 100) / 2,
+            dx: 7
+        };
+
+        let rightPressed = false;
+        let leftPressed = false;
+        let score = 0;
+        let gameRunning = false;
+
+        // Event listeners for paddle movement
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Right' || e.key === 'ArrowRight') rightPressed = true;
+            if (e.key === 'Left' || e.key === 'ArrowLeft') leftPressed = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Right' || e.key === 'ArrowRight') rightPressed = false;
+            if (e.key === 'Left' || e.key === 'ArrowLeft') leftPressed = false;
+        });
+
+        startButton.addEventListener('click', () => {
+            startButton.style.display = 'none';
+            canvas.style.display = 'block';
+            if (!gameRunning) {
+                draw();
+                gameRunning = true;
+            }
+        });
+
+        function drawBall() {
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#0095DD';
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawPaddle() {
+            ctx.beginPath();
+            ctx.rect(paddle.x, canvas.height - paddle.height, paddle.width, paddle.height);
+            ctx.fillStyle = '#0095DD';
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function movePaddle() {
+            if (rightPressed && paddle.x < canvas.width - paddle.width) {
+                paddle.x += paddle.dx;
+            } else if (leftPressed && paddle.x > 0) {
+                paddle.x -= paddle.dx;
+            }
+        }
+
+        function updateBallPosition() {
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Ball collision with walls
+            if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+                ball.dx = -ball.dx;
+            }
+            if (ball.y - ball.radius < 0) {
+                ball.dy = -ball.dy;
+            }
+
+            // Ball collision with paddle
+            if (
+                ball.y + ball.radius > canvas.height - paddle.height &&
+                ball.x > paddle.x &&
+                ball.x < paddle.x + paddle.width
+            ) {
+                ball.dy = -ball.dy;
+                score++;
+                scoreDiv.textContent = `Punti: ${score}`;
+            }
+
+            // Ball falls below paddle
+            if (ball.y + ball.radius > canvas.height) {
+                alert('Game Over!');
+                document.location.reload();
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBall();
+            drawPaddle();
+            movePaddle();
+            updateBallPosition();
+            requestAnimationFrame(draw);
+        }
+    </script>
+</body>
+</html>
